@@ -1,3 +1,7 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <dirent.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +10,11 @@
 
 #define NAME "diffmap"
 
+void		 usage (void);
+int		 compare_regular_files (char *filename1, char *filename2, int block_size, int screen_width);
+int		 compare_directories (char *filename1, char *filename2, int block_size, int screen_width);
+int		 compare_files (char *filename1, char *filename2, int block_size, int screen_width);
+
 void
 usage (void)
 {
@@ -13,9 +22,8 @@ usage (void)
 }
 
 int
-compare_files (char *filename1, char *filename2, int block_size, int screen_width)
+compare_regular_files (char *filename1, char *filename2, int block_size, int screen_width)
 {
-    int result = 0;
     int block_count = 0;
     int identical_block_count = 0;
 
@@ -66,6 +74,87 @@ compare_files (char *filename1, char *filename2, int block_size, int screen_widt
 }
 
 int
+compare_directories (char *dirname1, char *dirname2, int block_count, int screen_width)
+{
+    DIR *dir;
+    int ret = 0;
+
+    if (!(dir = opendir (dirname1)))
+	err (EXIT_FAILURE, "%s", dirname1);
+
+    struct dirent *dp;
+    while ((dp = readdir (dir))) {
+	char *filename1, *filename2;
+
+	if (0 == strcmp (dp->d_name, ".") ||
+	    0 == strcmp (dp->d_name, ".."))
+	    continue;
+
+	asprintf (&filename1, "%s/%s", dirname1, dp->d_name);
+	asprintf (&filename2, "%s/%s", dirname2, dp->d_name);
+
+	ret += compare_files (filename1, filename2, block_count, screen_width);
+
+	free (filename1);
+	free (filename2);
+    }
+
+    closedir (dir);
+
+    // search in dir2 files not present in dir1
+
+    if (!(dir = opendir (dirname2)))
+	err (EXIT_FAILURE, "%s", dirname2);
+
+    while ((dp = readdir (dir))) {
+	char *filename1, *filename2;
+
+	if (0 == strcmp (dp->d_name, ".") ||
+	    0 == strcmp (dp->d_name, ".."))
+	    continue;
+
+	asprintf (&filename1, "%s/%s", dirname1, dp->d_name);
+	asprintf (&filename2, "%s/%s", dirname2, dp->d_name);
+
+	free (filename1);
+	free (filename2);
+    }
+
+    closedir (dir);
+
+    return ret;
+}
+
+int
+compare_files (char *filename1, char *filename2, int block_size, int screen_width)
+{
+    int ret = 0;
+
+    struct stat sb1, sb2;
+    if (stat (filename1, &sb1) < 0) {
+	errx (EXIT_FAILURE, "Can't stat %s", filename1);
+    }
+    if (stat (filename2, &sb2) < 0) {
+	warnx ("Can't stat %s", filename2);
+	return (S_ISREG (sb1.st_mode) ? sb1.st_size / block_size : 1);
+    }
+
+    if (S_ISREG (sb1.st_mode) && S_ISREG (sb2.st_mode)) {
+	fprintf (stdout, "\\\\\\ %s\n", filename1);
+	fprintf (stdout, "/// %s\n", filename2);
+	ret = compare_regular_files (filename1, filename2, block_size, screen_width);
+    } else if (S_ISDIR (sb1.st_mode) && S_ISDIR (sb2.st_mode)) {
+	fprintf (stdout, "Entering %s\n", filename1);
+	ret = compare_directories (filename1, filename2, block_size, screen_width);
+	fprintf (stdout, "Leaving %s\n", filename1);
+    } else
+	errx (EXIT_FAILURE, "both arguments must be files or directories");
+
+    return ret;
+}
+
+
+int
 main (int argc, char *argv[])
 {
     int block_size = 512;
@@ -92,8 +181,5 @@ main (int argc, char *argv[])
     argc -= optind;
     argv += optind;
 
-    int ret;
-    ret = compare_files (argv[0], argv[1], block_size, screen_width);
-
-    exit (ret);
+    return compare_files (argv[0], argv[1], block_size, screen_width);
 }
