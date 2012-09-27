@@ -136,19 +136,19 @@ compare_directories (char *dirname1, char *dirname2, int block_count, int screen
 	err (EXIT_FAILURE, "%s", dirname2);
 
     while ((dp = readdir (dir))) {
-	char *filename1, *filename2;
+	char *filename;
 
 	if (0 == strcmp (dp->d_name, ".") ||
 	    0 == strcmp (dp->d_name, ".."))
 	    continue;
 
-	asprintf (&filename1, "%s/%s", dirname1, dp->d_name);
+	asprintf (&filename, "%s/%s", dirname1, dp->d_name);
 
 	struct stat sb;
-	if (stat (filename1, &sb) < 0)
-	    warn ("%s", filename1);
+	if (stat (filename, &sb) < 0)
+	    warn ("%s", filename);
 
-	free (filename1);
+	free (filename);
     }
 
     closedir (dir);
