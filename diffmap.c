@@ -210,5 +210,10 @@ main (int argc, char *argv[])
     argc -= optind;
     argv += optind;
 
+    if (argc != 2) {
+	usage ();
+	exit (EXIT_FAILURE);
+    }
+
     return compare_files (argv[0], argv[1], block_size, screen_width);
 }
