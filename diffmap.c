@@ -67,6 +67,9 @@ compare_regular_files (char *filename1, char *filename2, int block_size, int scr
     }
     fprintf (stdout, "\n");
 
+    free (buf1);
+    free (buf2);
+
     fclose (file1);
     fclose (file2);
 
