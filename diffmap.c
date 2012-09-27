@@ -168,6 +168,11 @@ compare_files (char *filename1, char *filename2, int block_size, int screen_widt
 	return (S_ISREG (sb1.st_mode) ? sb1.st_size / block_size : 1);
     }
 
+    if ((sb1.st_ino == sb2.st_ino) && (sb1.st_dev == sb2.st_dev)) {
+	warnx ("\"%s\" and \"%s\" are the same file.  Skipping comparison.", filename1, filename2);
+	return 0;
+    }
+
     if (S_ISREG (sb1.st_mode) && S_ISREG (sb2.st_mode)) {
 	fprintf (stdout, "\\\\\\ %s\n", filename1);
 	fprintf (stdout, "/// %s\n", filename2);
