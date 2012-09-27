@@ -143,10 +143,12 @@ compare_directories (char *dirname1, char *dirname2, int block_count, int screen
 	    continue;
 
 	asprintf (&filename1, "%s/%s", dirname1, dp->d_name);
-	asprintf (&filename2, "%s/%s", dirname2, dp->d_name);
+
+	struct stat sb;
+	if (stat (filename1, &sb) < 0)
+	    warn ("%s", filename1);
 
 	free (filename1);
-	free (filename2);
     }
 
     closedir (dir);
@@ -164,7 +166,7 @@ compare_files (char *filename1, char *filename2, int block_size, int screen_widt
 	errx (EXIT_FAILURE, "Can't stat %s", filename1);
     }
     if (stat (filename2, &sb2) < 0) {
-	warnx ("Can't stat %s", filename2);
+	warn ("%s", filename2);
 	return (S_ISREG (sb1.st_mode) ? sb1.st_size / block_size : 1);
     }
 
