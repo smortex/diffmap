@@ -41,10 +41,12 @@ int		 compare_regular_files (char *filename1, char *filename2, int block_size, i
 int		 compare_directories (char *filename1, char *filename2, int block_size, int screen_width);
 int		 compare_files (char *filename1, char *filename2, int block_size, int screen_width);
 
+int ignore_device;
+
 void
 usage (void)
 {
-    fprintf (stderr, "usage: " NAME " [-b block-size] [-w screen-width] file1 file2\n");
+    fprintf (stderr, "usage: " NAME " [-D] [-b block-size] [-w screen-width] file1 file2\n");
 }
 
 int
@@ -170,7 +172,7 @@ compare_files (char *filename1, char *filename2, int block_size, int screen_widt
 	return (S_ISREG (sb1.st_mode) ? sb1.st_size / block_size : 1);
     }
 
-    if ((sb1.st_ino == sb2.st_ino) && (sb1.st_dev == sb2.st_dev)) {
+    if ((sb1.st_ino == sb2.st_ino) && (!ignore_device || (sb1.st_dev == sb2.st_dev))) {
 	warnx ("\"%s\" and \"%s\" are the same file.  Skipping comparison.", filename1, filename2);
 	return 0;
     }
@@ -198,8 +200,11 @@ main (int argc, char *argv[])
 
     char junk;
     char ch;
-    while ((ch = getopt(argc, argv, "b:w:")) != -1) {
+    while ((ch = getopt(argc, argv, "Db:w:")) != -1) {
 	switch (ch) {
+	case 'D':
+	    ignore_device = 1;
+	    break;
 	case 'b':
 	    if (1 != sscanf (optarg, "%d%c", &block_size, &junk))
 		errx (EXIT_FAILURE, "\"%s\" is not a valid number", optarg);
