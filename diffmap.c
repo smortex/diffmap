@@ -77,15 +77,18 @@ compare_regular_files (char *filename1, char *filename2, int block_size, int scr
 	read1 = fread (buf1, 1, block_size, file1);
 	read2 = fread (buf2, 1, block_size, file2);
 
-	if ((read1 != read2) && (read1 == 0))
+	if ((read1 == 0) && (read2 == 0))
+		break;
+
+	if (read1 == 0) {
 	    line_position += fprintf (stdout, "/");
-	else if ((read1 != read2) && (read2 == 0))
+	} else if (read2 == 0) {
 	    line_position += fprintf (stdout, "\\");
-	else if (memcmp (buf1, buf2, read1))
-	    line_position += fprintf (stdout, "X");
-	else {
+	} else if ((read1 == read2) && (0 == memcmp (buf1, buf2, read1))) {
 	    identical_block_count++;
 	    line_position += fprintf (stdout, ".");
+	} else {
+	    line_position += fprintf (stdout, "X");
 	}
 
 	if (line_position == screen_width) {
