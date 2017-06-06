@@ -1,6 +1,6 @@
 PROG=	diffmap
 
-NO_MAN=
+WITHOUT_MAN=
 
 UNAME_S!=	uname -s
 .if ${UNAME_S} == Linux
