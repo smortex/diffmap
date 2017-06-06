@@ -4,13 +4,15 @@ Display different blocks between raw-data files.
 
 ## Build
 
-Checkout the code, then run BSD Make (GNU Make will not do):
+Checkout the code, then run CMake and Make:
 
+	% mkdir build
+	% cd build
+	% cmake ..
 	% make
 
 Installation is not required, run `make install` if you want to install to some
-standard location (you can define `BINDIR` to specify where to install the
-program), or run `./diffmap` from the source directory.
+standard location, or run `./diffmap` from the source directory.
 
 ## Usage
 
